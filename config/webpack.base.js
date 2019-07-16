@@ -2,29 +2,11 @@ const path = require('path')
 const htmlWebpackPlugin = require('html-webpack-plugin')
 const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
-const webpack = require('webpack')
-module.exports = {
-    //devtool:"cheap-module-source-map",  线上
-    //devtool:"cheap-module-eval-source-map" 开发
-    devtool: "cheap-module-eval-source-map",
-    //mode
-    mode: 'development',
-    //开启摇树功能
-    optimization: {
-        usedExports: true
-    },
-    devServer: {
-        contentBase: "./dist",//资源文件目录
-        open: true,//自动打开浏览器
-        port: 8081,//服务器端口
-        hot: true,//开启热模块功能
-        hotOnly: true,//即便HMR不生效，浏览器也不自动刷新，就开启hotOnly
-        proxy: {
-            '/api': {
-                target: 'http://localhost:9092'
-            }
-        }
-    },
+const merge = require('webpack-merge')
+const devConfig = require('./webpack.dev')
+const proConfig = require('./webpack.pro')
+
+const baseConfig = {
     //入口配置文件  string | array | object
     entry: './src/index.js',
     // entry: {
@@ -35,11 +17,19 @@ module.exports = {
     //出口文件
     output: {
         //必须是绝对路径
-        path: path.resolve(__dirname, 'dist'),
+        path: path.resolve(__dirname, '../dist'),
         //[]占位符
         filename: '[name].js',
         //打包后的文件前面的前缀
         //publicPath:''
+    },
+    //开启摇树功能
+    optimization: {
+        usedExports: true,
+        //做代码分割
+        splitChunks:{
+           chunks:"all"//默认是支持异步，我们使用all，表示不管异步还是还是同步，都做代码分割 
+        }
     },
     module: {
         rules: [
@@ -94,7 +84,6 @@ module.exports = {
         ]
     },
     plugins: [
-
         new CleanWebpackPlugin(),//打包之前将dist目录删除，重新打包
         new MiniCssExtractPlugin({
             filename: "[name].css"
@@ -105,9 +94,7 @@ module.exports = {
             inject: 'body',//表示打包后的js文件放到哪里
             filename: 'index.html',//输出的 HTML 文件名
             //chunks: ["index"]//只允许添加一些块（例如，只允许单元测试块）
-        }),
-        //热更新
-        new webpack.HotModuleReplacementPlugin()
+        })
         // new htmlWebpackPlugin({
         //     title: 'hello 我是列表页',
         //     template: './index.html',
@@ -123,4 +110,12 @@ module.exports = {
         //     chunks: ["detail"]
         // })
     ]
+}
+
+module.exports = env => {
+    if (env && env.production) {
+        return merge(baseConfig, proConfig)
+    } else {
+        return merge(baseConfig, devConfig)
+    }
 }
