@@ -65,7 +65,16 @@
 // //import "@babel/polyfill"
 // add(1, 2)
 
-import _ from 'lodash'
+// import _ from 'lodash'
 
-console.log(_.join([1,2,3,'****']));
+// console.log(_.join([1,2,3,'****']));
 
+//异步代码
+document.addEventListener('click', () => {
+    // const element = document.createElement('div')
+    // element.innerHTML = 'welcome  to  webpack4.x'
+    // document.body.appendChild(element)
+    import('./async').then(({default:func})=>{
+        func()
+    })
+})
